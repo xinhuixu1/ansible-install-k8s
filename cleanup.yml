@@ -1,0 +1,65 @@
+---
+- name: 清理K8s集群环境
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: 停止服务
+      systemd:
+        name: "{{ item }}"
+        state: stopped
+      loop:
+        - etcd
+        - kube-apiserver
+        - kube-controller-manager
+        - kube-scheduler
+        - kubelet
+        - kube-proxy
+        - cri-docker
+        - docker
+
+    - name: 卸载软件包
+      yum:
+        name: "{{ item }}"
+        state: absent
+      loop:
+        - nginx
+        - keepalived
+
+    - name: 删除目录和文件
+      shell: rm -rf "{{ item }}"
+      loop:
+        - /opt/kubernetes
+        - /opt/etcd
+        - /tmp/k8s
+        - /var/lib/etcd
+        - /usr/bin/cri-dockerd
+        - /etc/cni/net.d
+        - /var/lib/docker
+
+    - name: 删除Docker相关文件
+      file:
+        path: "/usr/bin/{{ item }}"
+        state: absent
+      loop:
+        - docker-init
+        - docker-proxy
+        - docker
+        - containerd-shim-runc-v2
+        - runc
+        - ctr
+        - dockerd
+        - containerd
+
+    - name: 删除systemd服务文件
+      file:
+        path: "/usr/lib/systemd/system/{{ item }}"
+        state: absent
+      loop:
+        - kube-apiserver.service
+        - kube-controller-manager.service
+        - kube-scheduler.service
+        - kubelet.service
+        - kube-proxy.service
+        - etcd.service
+        - cri-docker.service
+        - docker.service

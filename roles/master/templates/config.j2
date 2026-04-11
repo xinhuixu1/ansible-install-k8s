@@ -1,0 +1,21 @@
+{% set local_ip = inventory_hostname + ':' + '6443' %}
+
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority-data: {{ lookup('pipe', 'base64 -w 0 ssl/k8s/ca.pem') }}
+    server: https://{{ local_ip }}
+  name: kubernetes
+contexts:
+- context:
+    cluster: kubernetes
+    user: admin
+  name: default
+current-context: default
+kind: Config
+preferences: {}
+users:
+- name: admin
+  user:
+    client-certificate-data: {{ lookup('pipe', 'base64 -w 0 ssl/k8s/admin.pem') }}
+    client-key-data: {{ lookup('pipe', 'base64 -w 0 ssl/k8s/admin-key.pem') }}
